@@ -57,7 +57,7 @@
  extern "C" {
 #endif 
  
-#define F_CPU 54000000ULL
+//#define F_CPU 54000000ULL
 #define CLOCK_HSI48
 
 #define TS_CAL1  *((volatile uint16_t*)0x1FFFF7B8)

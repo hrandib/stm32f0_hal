@@ -1,8 +1,9 @@
-// STM32F031 & STM32F051
+// STM32F030 & STM32F031 & STM32F051
 #pragma once
 
 #include "stm32f0xx.h"
 #include "utils.h"
+#include "streams.h"
 #include "gpio.h"
 #include "circularBuffer.h"
 
@@ -176,7 +177,7 @@ namespace Usarts
 		using TxPin = Pa9;
 		using RxPin = Pa10;
 	};
-#ifdef STM32F031
+#if defined STM32F031 || defined STM32F030		//valid for STM32F030x4 STM32F030x6
 	struct RemapUsart1_Pa2Pa3
 	{
 		using TxPin = Pa2;
@@ -188,7 +189,7 @@ namespace Usarts
 		using RxPin = Pa15;
 	};
 #endif
-#ifdef STM32F051
+#if defined STM32F051 || defined STM32F030		//valid for STM32F030x8
 	template<> struct DefaultRemap<USART2_BASE>
 	{
 		using TxPin = Pa2;
@@ -354,7 +355,7 @@ namespace Usarts
 		// Gpio Init
 			if(BaseAddr == USART1_BASE)
 			{
-				static const bool isRemap = (is_same<TxPin, Pa1>::value & is_same<RxPin, Pa2>::value) ||	//FIXME: Possible Error - Pa2 & Pa3?
+				static const bool isRemap = (is_same<TxPin, Pa2>::value & is_same<RxPin, Pa3>::value) ||
 											(is_same<TxPin, Pa9>::value & is_same<RxPin, Pa10>::value) ||
 											(is_same<TxPin, Pa14>::value & is_same<RxPin, Pa15>::value);
 				static const bool noRemap = is_same<TxPin, Pb6>::value & is_same<RxPin, Pb7>::value;
@@ -509,12 +510,12 @@ namespace Usarts
 		{
 			return Puts((const uint8_t*)s);
 		}
-		template<NumSystem system>
-		static bool Puts(uint32_t value)
+		template<DataFormat system>
+		static bool Puts(int32_t value)
 		{
 			using namespace PrivateUtils;
-			uint8_t buf[UtoaTraits<system>::asize + 1];
-			uint8_t* ptr = utoa(value, buf, UtoaTraits<system>::base);
+			uint8_t buf[UtoaTraits<system>::asize + 1] = { 0 };
+			uint8_t* ptr = IO::itoa(value, buf, UtoaTraits<system>::base);
 			while(*ptr)
 			{
 				if(!txbuf.Write(*ptr++)) return false;

@@ -192,10 +192,12 @@ void SystemInit (void)
   RCC->CIR = 0x00000000;
 
   /* Configure the System clock frequency, AHB/APBx prescalers and Flash settings */
-#ifdef CLOCK_HSI48
-  SetSysClockHSI48();
-#elif defined CLOCK_HSE48
-  SetSysClockHSE48();
+#ifndef DONTSETCLOCK
+	#ifdef CLOCK_HSI48
+	  SetSysClockHSI48();
+	#elif defined CLOCK_HSE48
+	  SetSysClockHSE48();
+	#endif
 #endif
 }
 

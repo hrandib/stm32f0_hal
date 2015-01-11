@@ -125,5 +125,5 @@ namespace Mcucpp
 		typedef Private::Dma<DMA1_Channel4_BASE> DmaCh4;
 		typedef Private::Dma<DMA1_Channel5_BASE> DmaCh5;
 
-	}
+	}//Dmas
 }

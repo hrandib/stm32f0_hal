@@ -46,7 +46,7 @@ namespace Mcucpp
 				c == 239.5 ? Tsample::_239c5 : Tsample(__UINT32_MAX__);
 		}
 
-		enum class Clock : uint32_t			//TODO: Set unsigned enums in compiler options
+		enum class Clock : uint32_t
 		{
 			Hsi14 = 0,
 			PclkDiv2 = ADC_CFGR2_CKMODE_0,
@@ -208,7 +208,7 @@ namespace Mcucpp
 			{
 				Disable();
 				Regs()->CR = ADC_CR_ADCAL;
-				delay_ns<500>();
+				while(!(Regs()->CR & ADC_CR_ADCAL));
 				while(Regs()->CR & ADC_CR_ADCAL);
 			}
 			static void Disable()
@@ -235,6 +235,10 @@ namespace Mcucpp
 			{
 				Regs()->CHSELR = static_cast<uint32_t>(channels);
 			}
+			static void SelectChannels(uint32_t channelMask)
+			{
+				Regs()->CHSELR = channelMask;
+			}
 			template<Tsample t>
 			static void SetTsample()
 			{
@@ -246,12 +250,18 @@ namespace Mcucpp
 				while(!(Regs()->ISR & ADC_ISR_EOC));
 				return Regs()->DR;
 			}
-
 			static void Start()
 			{
 				Regs()->CR = ADC_CR_ADSTART;
 			}
-
+			template<Dmas::Cfg cfg, typename T>
+			static void DmaInit(T* buf)
+			{
+				using namespace Dmas;
+				NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+				Dma::Init<cfg | FromPeriph | MemInc, Mem16bits, Per16bits>();
+				Dma::SetPerMemAddr(&Regs()->DR, buf);
+			}
 		};
 	}//Private
 
