@@ -12,6 +12,7 @@ namespace Mcucpp
 	{
 		enum BaseConfig
 		{
+			Single = 0,
 			Discontinuous = ADC_CFGR1_DISCEN,
 			AutoOff = ADC_CFGR1_AUTOFF,
 			Wait = ADC_CFGR1_WAIT,

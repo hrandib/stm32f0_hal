@@ -1,4 +1,4 @@
-// STM32F031 & STM32F051 Support
+//Tested on STM32F030 & STM32F031 & STM32F051
 #pragma once
 
 #include <type_traits>
@@ -56,8 +56,8 @@ namespace Mcucpp
 			Out_ForceActive,
 			
 			// PWM mode 1 - In up counting, channel x is active as long as TIMx_CNT < TIMx_CCRx 
-			// else inactive. In down counting, channel x is inactive(OCxREF = ‘0’) as long as
-			// TIMx_CNT > TIMx_CCRx else active(OCxREF = ’1’).
+			// else inactive. In down counting, channel x is inactive(OCxREF = â€˜0â€™) as long as
+			// TIMx_CNT > TIMx_CCRx else active(OCxREF = â€™1â€™).
 			Out_PwmMode1,
 
 			// PWM mode 2 - In up counting, channel x is inactive as long as TIMx_CNT < TIMx_CCR1
@@ -209,7 +209,7 @@ namespace Mcucpp
 						break;
 					case TIM17_BASE: RCC->APB2ENR |= RCC_APB2ENR_TIM17EN;
 						break;				 			 
-#ifdef STM32F051
+#if defined STM32F051 || defined STM32F030		//only for stm32f030x8/
 					case TIM15_BASE: RCC->APB2ENR |= RCC_APB2ENR_TIM15EN;
 						break;
 					case TIM6_BASE: RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;
@@ -326,7 +326,7 @@ namespace Mcucpp
 				}
 				
 				template<Events ev>
-				static bool Event()
+				static bool IsEvent()
 				{
 					return Regs()->SR & (1 << ev);
 				}
@@ -335,7 +335,7 @@ namespace Mcucpp
 				{
 					Regs()->SR &= ~uint16_t(1 << ev);
 				}
-				static bool Enabled()
+				static bool IsEnabled()
 				{
 					return Regs()->CR1 & TIM_CR1_CEN;
 				}
@@ -349,11 +349,11 @@ namespace Mcucpp
 	}
 		typedef Timers::Private::Timer<TIM1_BASE> Tim1;
 		typedef Timers::Private::Timer<TIM2_BASE> Tim2;
-		typedef Timers::Private::Timer<TIM2_BASE> Tim3;
+		typedef Timers::Private::Timer<TIM3_BASE> Tim3;
 		typedef Timers::Private::Timer<TIM14_BASE> Tim14;
 		typedef Timers::Private::Timer<TIM16_BASE> Tim16;
 		typedef Timers::Private::Timer<TIM17_BASE> Tim17;
-#ifdef STM32F051
+#if defined STM32F051 || defined STM32F030		//only for stm32f030x8
 	using Tim6 = Timers::Private::Timer<TIM6_BASE>;
 	using Tim15 = Timers::Private::Timer<TIM15_BASE>;
 #endif
