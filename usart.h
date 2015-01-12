@@ -588,7 +588,7 @@ namespace Usarts
 	template< uint32_t BaseAddr, typename Remap_, uint32_t TxBufSize, uint32_t RxBufSize>
 	CircularBuffer<RxBufSize> UsartIrq<BaseAddr, Remap_, TxBufSize, RxBufSize>::rxbuf;
 
-//--------------------------
+//------------------------
 	//TODO: implement DMA handling
 
 /* 	template<uint32_t BaseAddr, RemapCfg rem = NoRemap, typename DEpin = Nullpin, uint32_t TxBufSize = 16, uint32_t RxBufSize = TxBufSize>
