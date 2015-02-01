@@ -114,16 +114,18 @@ namespace Mcucpp
 
 		enum IRQs
 		{
-			UpdateIRQ,
-			CC1IRQ,
-			CC2IRQ,
-			CC3IRQ,
-			CC4IRQ,
-			ComIRQ,
-			TriggerIRQ,
-			BreakIRQ
+			UpdateIRQ = 1U,
+			CC1IRQ = 1U << 1,
+			CC2IRQ = 1U << 2,
+			CC3IRQ = 1U << 3,
+			CC4IRQ = 1U << 4,
+			ComIRQ = 1U << 5,
+			TriggerIRQ = 1U << 6,
+			BreakIRQ = 1U << 7
 		};
-		
+		constexpr IRQs operator|(IRQs c1, IRQs c2)
+		{ return static_cast<IRQs>(uint32_t(c1) | uint32_t(c2)); }
+
 		enum Events
 		{
 			UpdateEv,
@@ -216,6 +218,19 @@ namespace Mcucpp
 						break;
 #endif
 					}
+					constexpr static IRQn irq =
+#if defined STM32F031 || STM32F051
+									BaseAddr == TIM2_BASE ? TIM2_IRQn :
+									BaseAddr == TIM6_BASE ? TIM6_IRQn :
+#endif
+									BaseAddr == TIM3_BASE ? TIM3_IRQn :
+									BaseAddr == TIM14_BASE ? TIM14_IRQn :
+									BaseAddr == TIM15_BASE ? TIM15_IRQn :
+									BaseAddr == TIM16_BASE ? TIM16_IRQn :
+									BaseAddr == TIM17_BASE ? TIM17_IRQn :
+									BaseAddr == TIM1_BASE ? TIM1_CC_IRQn : (IRQn)0xFF;
+					if(irq != (IRQn)0xFF) NVIC_EnableIRQ(irq);
+					if(irq == TIM1_CC_IRQn) NVIC_EnableIRQ(TIM1_BRK_UP_TRG_COM_IRQn);
 					Regs()->CR1 = cfg;
 					if(presc) Regs()->PSC = presc - 1;
 					if(autoreload) Regs()->ARR = autoreload - 1;
@@ -316,15 +331,23 @@ namespace Mcucpp
 					return Regs()->CNT;
 				}
 
-				static void DmaRequestEnable(DmaRequests req)
+				static void EnableDmaRequest(DmaRequests req)
 				{
 					Regs()->DIER |= 1 << (8UL + req);
 				}
-				static void IRQEnable(IRQs irq)
+				static void DisableDmaRequest(DmaRequests req)
 				{
-					Regs()->DIER |= 1 << irq;
+					Regs()->DIER &= ~(1 << (8UL + req));
 				}
-				
+				static void EnableIRQ(IRQs irq)
+				{
+					Regs()->DIER |= irq;
+				}
+				static void DisableIRQ(IRQs irq)
+				{
+					Regs()->DIER &= ~irq;
+				}
+
 				template<Events ev>
 				static bool IsEvent()
 				{
@@ -333,7 +356,7 @@ namespace Mcucpp
 				template<Events ev>
 				static void ClearEvent()
 				{
-					Regs()->SR &= ~uint16_t(1 << ev);
+					Regs()->SR = ~uint16_t(1 << ev);
 				}
 				static bool IsEnabled()
 				{

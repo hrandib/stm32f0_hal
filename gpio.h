@@ -120,6 +120,10 @@ namespace Gpio
 			{
 			  return Regs()->ODR;
 			}
+			inline static GPIO_TypeDef* GetRegs()
+			{
+				return Regs();
+			}
 
 		// constant interface
 
