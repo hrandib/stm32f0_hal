@@ -10,6 +10,7 @@ namespace Mcucpp
 	{
 		typedef uint16_t Prescaler_t;
 		typedef uint16_t Autoreload_t;
+		static const bool NoIRQ = false;
 
 		enum Cfg
 		{
@@ -194,7 +195,7 @@ namespace Mcucpp
 					return reinterpret_cast<TIM_TypeDef*>(BaseAddr);
 				}
 			public:
-				template<Cfg cfg, Prescaler_t presc = 0, Autoreload_t autoreload = 0>
+				template<Cfg cfg, Prescaler_t presc = 0, Autoreload_t autoreload = 0, bool EnableNvic_ = true>
 				static void Init()
 				{
 					switch(BaseAddr)
@@ -218,6 +219,14 @@ namespace Mcucpp
 						break;
 #endif
 					}
+					Regs()->CR1 = cfg;
+					if(presc) Regs()->PSC = presc - 1;
+					if(autoreload) Regs()->ARR = autoreload - 1;
+					Regs()->BDTR |= TIM_BDTR_MOE;
+					if(EnableNvic_) EnableNvic();
+				}
+				static void EnableNvic()
+				{
 					constexpr static IRQn irq =
 #if defined STM32F031 || STM32F051
 									BaseAddr == TIM2_BASE ? TIM2_IRQn :
@@ -231,16 +240,13 @@ namespace Mcucpp
 									BaseAddr == TIM1_BASE ? TIM1_CC_IRQn : (IRQn)0xFF;
 					if(irq != (IRQn)0xFF) NVIC_EnableIRQ(irq);
 					if(irq == TIM1_CC_IRQn) NVIC_EnableIRQ(TIM1_BRK_UP_TRG_COM_IRQn);
-					Regs()->CR1 = cfg;
-					if(presc) Regs()->PSC = presc - 1;
-					if(autoreload) Regs()->ARR = autoreload - 1;
-					Regs()->BDTR |= TIM_BDTR_MOE;
 				}
-				static void MasterModeSelect(MasterMode mode)
+
+				static void SetMasterMode(MasterMode mode)
 				{
 					Regs()->CR2 = mode << 4UL;
 				}
-				static void SlaveModeSelect(SlaveSource src, SlaveMode mode, SlaveCfg cfg = Default)
+				static void SetSlaveMode(SlaveSource src, SlaveMode mode, SlaveCfg cfg = Default)
 				{
 					Regs()->SMCR = src << 4UL | mode | cfg;
 				}
@@ -268,7 +274,7 @@ namespace Mcucpp
 				template<ChannelNum ch, ChModeInput mode,
 						 ChannelCfgInFilter infilter = In_NoFilter,
 						 ChannelCfgInPrescaler inpresc = In_NoPresc>
-				static void ChannelInit()
+				static void InitChannel()
 				{
 					enum{ cfg = infilter << 4UL | inpresc << 2UL | mode };
 					if(ch == AllChannels)
@@ -281,7 +287,7 @@ namespace Mcucpp
 				template<ChannelNum ch, ChModeOutput mode,
 						 ChCfgCompareMode compcfg,
 						 ChCfgOut cfg_add = Out_Default>
-				static void ChannelInit()
+				static void InitChannel()
 				{
 					enum{ cfg = compcfg << 4UL | cfg_add << 2UL };
 					if(ch == AllChannels)
@@ -293,7 +299,7 @@ namespace Mcucpp
 				}
 
 				template<ChannelNum ch, ActiveLevel alevel = ActiveHigh>
-				static void ChannelEnable()
+				static void EnableChannel()
 				{
 					Regs()->CCER |= (1 | alevel << 1) << 4 * ch ;
 				}

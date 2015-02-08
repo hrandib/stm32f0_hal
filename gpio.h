@@ -374,6 +374,19 @@ namespace Gpio
 		RCC->AHBENR |= PortsEnableMask<First, Rest...>::value;
 	}
 
+	template<typename Pin>
+	struct Inverted : public Pin
+	{
+		static void Set()
+		{
+			Pin::Clear();
+		}
+		static void Clear()
+		{
+			Pin::Set();
+		}
+	};
+
 }//Gpio
 
 	#define PORTDEF(x,y,z) typedef Gpio::Private::PortImplementation<GPIO##x##_BASE, z> Port##y	
