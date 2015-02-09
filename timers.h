@@ -221,7 +221,7 @@ namespace Mcucpp
 					}
 					Regs()->CR1 = cfg;
 					if(presc) Regs()->PSC = presc - 1;
-					if(autoreload) Regs()->ARR = autoreload - 1;
+					if(autoreload) Regs()->ARR = autoreload;
 					Regs()->BDTR |= TIM_BDTR_MOE;
 					if(EnableNvic_) EnableNvic();
 				}
@@ -261,7 +261,7 @@ namespace Mcucpp
 				}
 				static void WriteAutoReload(DataT c)
 				{
-					Regs()->ARR = c - 1;
+					Regs()->ARR = c;
 				}
 				static void WriteRepeatCounter(uint8_t c)
 				{
@@ -332,9 +332,13 @@ namespace Mcucpp
 					return Regs()->CCR1;
 				}
 
-				static DataT ReadCount()
+				static DataT ReadCounter()
 				{
 					return Regs()->CNT;
+				}
+				static void Clear()
+				{
+					Regs()->CNT = 0;
 				}
 
 				static void EnableDmaRequest(DmaRequests req)
@@ -354,13 +358,11 @@ namespace Mcucpp
 					Regs()->DIER &= ~irq;
 				}
 
-				template<Events ev>
-				static bool IsEvent()
+				static bool IsEvent(const Events ev)
 				{
 					return Regs()->SR & (1 << ev);
 				}
-				template<Events ev>
-				static void ClearEvent()
+				static void ClearEvent(Events ev)
 				{
 					Regs()->SR = ~uint16_t(1 << ev);
 				}
@@ -374,7 +376,6 @@ namespace Mcucpp
 				}
 			};
 		}//Private
-	
 	}
 		typedef Timers::Private::Timer<TIM1_BASE> Tim1;
 		typedef Timers::Private::Timer<TIM2_BASE> Tim2;
