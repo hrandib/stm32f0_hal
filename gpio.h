@@ -282,9 +282,69 @@ namespace Gpio
 			inline static void AltFuncNumber(DataT, uint8_t) { }
 		};
 
+		template<typename Pin>
+		class Exti
+		{
+		public:
+			enum class Trigger
+			{
+				No,
+				RisingEdge,
+				FallingEdge,
+				BothEdges
+			};
+		private:
+			static void SetTriggerEdge(Trigger tr)
+			{
+				const uint32_t tr_ = static_cast<uint32_t>(tr);
+				EXTI->RSTR |= (tr_ & 0x01 ? Pin::mask : 0);
+				EXTI->FSTR |= (tr_ & 0x02 ? Pin::mask : 0);
+			}
+		public:
+			static void EnableIRQ(Trigger tr = Trigger::RisingEdge)
+			{
+				EXTI->IMR |= Pin::mask;
+				SetTriggerEdge(tr);
+				IRQn irq = Pin::position < 2 ? EXTI0_1_IRQn  :
+							Pin::position < 4 ? EXTI2_3_IRQn  :
+							EXTI4_15_IRQn;
+				NVIC_EnableIRQ(irq);
+				SYSCFG->EXTICR[Pin::position / 4] |= Pin::port_id << ((Pin::position % 4) * 4);
+			}
+			static void DisableIRQ()
+			{
+				EXTI->IMR &= ~Pin::mask;
+				EXTI->RSTR &= ~Pin::mask;
+				EXTI->FSTR &= ~Pin::mask;
+				IRQn irq = Pin::position < 2 ? EXTI0_1_IRQn  :
+							Pin::position < 4 ? EXTI2_3_IRQn  :
+							EXTI4_15_IRQn;
+				NVIC_DisableIRQ(irq);
+				SYSCFG->EXTICR[Pin::position / 4] &= ~(Pin::port_id << ((Pin::position % 4) * 4));
+			}
+			static void EnableEvent(Trigger tr = Trigger::RisingEdge)
+			{
+				EXTI->EMR |= Pin::mask;
+				SetTriggerEdge(tr);
+			}
+			static void DisableEvent()
+			{
+				EXTI->EMR &= ~Pin::mask;
+				EXTI->RSTR &= ~Pin::mask;
+				EXTI->FSTR &= ~Pin::mask;
+				SetTriggerEdge(tr);
+			}
+			static void ClearPending()
+			{
+				EXTI->PR = Pin::mask;
+			}
+		};
+
 		template <typename PORT, uint16_t pos>
 		class TPin
 		{
+		private:
+			using Self = TPin<PORT, pos>;
 		public:
 			typedef PORT Port;
 			enum
@@ -293,6 +353,7 @@ namespace Gpio
 				mask = 1 << pos,
 				port_id = Port::id
 			};
+			using Exti = Exti<Self>;
 
 			template <OutputConf conf, OutputMode mode>
 			inline static void SetConfig()
