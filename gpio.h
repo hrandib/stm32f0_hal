@@ -294,6 +294,9 @@ namespace Gpio
 		class ExtiImplementation
 		{
 		private:
+			static constexpr IRQn NVIC_IRQ = Pin::position < 2 ? EXTI0_1_IRQn :
+											 Pin::position < 4 ? EXTI2_3_IRQn :
+																 EXTI4_15_IRQn;
 			static void SetTriggerEdge(Trigger tr)
 			{
 				const uint32_t tr_ = static_cast<uint32_t>(tr);
@@ -305,10 +308,7 @@ namespace Gpio
 			{
 				EXTI->IMR |= Pin::mask;
 				SetTriggerEdge(tr);
-				IRQn irq = Pin::position < 2 ? EXTI0_1_IRQn  :
-							Pin::position < 4 ? EXTI2_3_IRQn  :
-							EXTI4_15_IRQn;
-				NVIC_EnableIRQ(irq);
+				NVIC_EnableIRQ(NVIC_IRQ);
 				SYSCFG->EXTICR[Pin::position / 4] |= Pin::port_id << ((Pin::position % 4) * 4);
 			}
 			static void DisableIRQ()
@@ -316,10 +316,7 @@ namespace Gpio
 				EXTI->IMR &= ~Pin::mask;
 				EXTI->RTSR &= ~Pin::mask;
 				EXTI->FTSR &= ~Pin::mask;
-				IRQn irq = Pin::position < 2 ? EXTI0_1_IRQn  :
-							Pin::position < 4 ? EXTI2_3_IRQn  :
-							EXTI4_15_IRQn;
-				NVIC_DisableIRQ(irq);
+				NVIC_DisableIRQ(NVIC_IRQ);
 				SYSCFG->EXTICR[Pin::position / 4] &= ~(Pin::port_id << ((Pin::position % 4) * 4));
 			}
 			static void EnableEvent(Trigger tr = Trigger::RisingEdge)
@@ -336,6 +333,10 @@ namespace Gpio
 			static void ClearPending()
 			{
 				EXTI->PR = Pin::mask;
+			}
+			static void SetPriority(uint8_t prio)
+			{
+				NVIC_SetPriority(NVIC_IRQ, prio);
 			}
 		};
 
