@@ -160,18 +160,18 @@ namespace Gpio
 			inline static void WriteConfig()
 			{
 				enum { mask2bit = ConfigurationMask2bit<mask>::value };
+				Regs()->MODER = (mode >> 3) * mask2bit;
 				Regs()->OSPEEDR = speed * mask2bit;
 				Regs()->OTYPER = ((mode >> 2) & 0x01) * mask;
-				Regs()->MODER = (mode >> 3) * mask2bit;
 				Regs()->PUPDR = (mode & 0x03) * mask2bit | (~mask2bit) * PullDown;
 			}
 			template<DataT mask, OutputConf speed, OutputMode mode>
 			inline static void SetConfig()
 			{
 				enum { mask2bit = ConfigurationMask2bit<mask>::value };
+				Regs()->MODER =  (Regs()->MODER & ~(mask2bit * 0x03)) | (mode >> 3) * mask2bit;
 				Regs()->OTYPER = (Regs()->OTYPER & ~mask) | ((mode >> 2) & 0x01) * mask;
 				Regs()->OSPEEDR = (Regs()->OSPEEDR & ~(mask2bit * 0x03)) | speed * mask2bit;
-				Regs()->MODER =  (Regs()->MODER & ~(mask2bit * 0x03)) | (mode >> 3) * mask2bit;
 				Regs()->PUPDR = (Regs()->PUPDR & ~(mask2bit * 0x03)) | (mode & 0x03) * mask2bit;
 			}
 			//all pins except mask will be inputs with pull down
