@@ -240,8 +240,7 @@ namespace Mcucpp
 			{
 				Regs()->CHSELR = channelMask;
 			}
-			template<Tsample t>
-			static void SetTsample()
+			static void SetTsample(Tsample t)
 			{
 				Regs()->SMPR = static_cast<uint32_t>(t);
 			}
