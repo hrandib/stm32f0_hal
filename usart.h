@@ -515,7 +515,7 @@ namespace Usarts
 		{
 			using namespace PrivateUtils;
 			uint8_t buf[UtoaTraits<system>::asize + 1] = { 0 };
-			uint8_t* ptr = IO::itoa(value, buf, UtoaTraits<system>::base);
+			uint8_t* ptr = Io::itoa(value, buf, UtoaTraits<system>::base);
 			while(*ptr)
 			{
 				if(!txbuf.Write(*ptr++)) return false;
