@@ -473,6 +473,7 @@ namespace Usarts
 		USINGBASEFUNC_NORET(UBase, DisableIRQ, IRQ)
 		static CircularBuffer<TxBufSize> txbuf;
 		static CircularBuffer<RxBufSize> rxbuf;
+		friend uint8_t* GetStr();
 	public:
 		template<BaseConfig conf, typename BaudRate_ = BaudRate<9600UL>, typename... Config>
 		static void Init()
@@ -695,11 +696,11 @@ namespace Usarts
 		static uint8_t buf[BUFSIZE];
 		static typename SelectSizeForLength<BUFSIZE>::type i = 0;
 		uint8_t ch;
-		if(Usart::Getch(ch))
+		while(Usart::Getch(ch))
 		{
 			if(i != (BUFSIZE - 1))
 			{
-				if(ch == '\r') return nullptr;
+				if(ch == '\r') continue;
 				if(ch == '\n') ch = '\0';
 				buf[i++] = ch;
 				if(ch == '\0')
