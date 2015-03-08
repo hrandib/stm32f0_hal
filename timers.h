@@ -387,4 +387,33 @@ namespace Mcucpp
 	using Tim6 = Timers::Private::Timer<TIM6_BASE>;
 	using Tim15 = Timers::Private::Timer<TIM15_BASE>;
 #endif
+	namespace Watchdog
+	{
+		enum Period
+		{
+			_64ms = 40,
+			_128ms = 80,
+			_256ms = 160,
+			_512ms = 320,
+			_1s = 640,
+			_3s = 1875,
+			_6s = 3800
+		};
+
+		inline static void Refresh()
+		{
+			IWDG->KR = 0xAAAA;
+		}
+
+		inline static void Enable(Period p)
+		{
+			IWDG->KR = 0xCCCC;
+			IWDG->KR = 0x5555;
+			IWDG->PR = 4;	//div 64
+			IWDG->RLR = p;
+			while(IWDG->SR)
+				;
+			IWDG->KR = 0xAAAA;
+		}
+	}
 }
